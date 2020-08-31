@@ -12,6 +12,11 @@ public class IMU {
 
         double norm = Math.sqrt(ax * ax + ay * ay + az * az);
 
+        // 单元化
+        ax = ax / norm;
+        ay = ay / norm;
+        az = az / norm;
+
         double vx = 2 * (seq1 * seq3 - seq0 * seq2);
         double vy = 2 * (seq0 * seq1 + seq2 * seq3);
         double vz = seq0 * seq0 - seq1 * seq1 - seq2 * seq2 + seq3 * seq3;
