@@ -1,0 +1,32 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "30.0.2"
+
+    defaultConfig {
+        applicationId 'hacker.express'
+        minSdkVersion 14
+        targetSdkVersion 23
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:support-v4:23.4.0'
+    //compile files('libs/androidplot-core-0.6.0.jar')
+    implementation 'com.androidplot:androidplot-core:0.6.1'
+    implementation files('libs/commons-math3-3.0.jar')
+}
