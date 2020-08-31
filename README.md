@@ -1,5 +1,5 @@
 # NightElf
-##### express hacker
+### express hacker
 > android studio 工程项目，编译可得Android平台APK，记录手机三轴陀螺仪、加速度仪的参数，包括：
 > > * AX X轴方向
 > > * AY Y轴方向
@@ -18,3 +18,9 @@
 
 # expres-anim
 > 这里是通过[Blender](https://www.blender.org/)加载姿态数据，套用给OBJ模型，来实现动画回放。
+
+
+# notice
+* 安装后，在应用设置中打开该APP自启动，禁用该APP省电优化。
+* 点击后自动后台运行并最小化。
+* 每5分钟左右记录一次数据到磁盘，数据将追加到手机根目录/.night/elf/elf.csv 文件中。**注意：**该文件夹可能隐藏，需打开文件资源管理器的显示隐藏文件选项。
