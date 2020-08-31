@@ -223,8 +223,7 @@ public class LinearAccelerationSensor implements GyroscopeSensorObserver,
             linearAcceleration[1] = (this.acceleration[1] - components[1]);
             linearAcceleration[2] = (this.acceleration[2] - components[2]);
 
-            linearAcceleration = mfLinearAcceleration
-                    .filterFloat(linearAcceleration);
+            linearAcceleration = mfLinearAcceleration.filterFloat(linearAcceleration);
         }
 
         timestampOld = timestamp;
