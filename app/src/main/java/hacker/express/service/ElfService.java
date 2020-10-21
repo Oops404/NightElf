@@ -43,7 +43,7 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
     private static File logFile;
     private static FileOutputStream FOS;
 
-    private static final int WRITE_THRESHOLD = 1500;
+    private static final int WRITE_THRESHOLD = 3000;
 
     private volatile int OBSERVED_COUNT = 0;
 
@@ -57,8 +57,12 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
 
     private volatile boolean mainThreadExist = false;
 
-    private static final int FRAME_RATE = 100;
-    private static final float INTEGRAL_TIME_CONSTANT = (((float) FRAME_RATE) / 1000) * (((float) FRAME_RATE) / 1000);
+    private static final int SECOND = 1000;
+    private static final int FRAME_RATE = SECOND / 20;
+    private static final float T = ((float) FRAME_RATE) / SECOND;
+    private static final double T2 = Math.pow(T, 2);
+    private static final float INTEGRAL_TIME_CONSTANT
+            = (((float) FRAME_RATE) / SECOND) * (((float) FRAME_RATE) / SECOND);
 
     private float calibrateAccX = 0;
     private float calibrateAccY = 0;
@@ -142,9 +146,9 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
                 calibrateAccX = -linearAcceleration[0];
                 calibrateAccY = -linearAcceleration[1];
                 calibrateAccZ = -linearAcceleration[2];
-                calibrateDistanceX = -((linearAcceleration[0] + calibrateAccX) * INTEGRAL_TIME_CONSTANT);
-                calibrateDistanceY = -((linearAcceleration[1] + calibrateAccY) * INTEGRAL_TIME_CONSTANT);
-                calibrateDistanceZ = -((linearAcceleration[2] + calibrateAccZ) * INTEGRAL_TIME_CONSTANT);
+                // calibrateDistanceX = -((linearAcceleration[0] + calibrateAccX) * INTEGRAL_TIME_CONSTANT);
+                // calibrateDistanceY = -((linearAcceleration[1] + calibrateAccY) * INTEGRAL_TIME_CONSTANT);
+                // calibrateDistanceZ = -((linearAcceleration[2] + calibrateAccZ) * INTEGRAL_TIME_CONSTANT);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -200,7 +204,8 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
     /**
      * Log output data to an external .csv file.
      */
-    private float la = 0, ly = 0, lz = 0;
+    private float lx = 0, ly = 0, lz = 0;
+    private float vx = 0, vy = 0, vz = 0;
 
     private void logData() {
         try {
@@ -214,10 +219,10 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
         //logBuilder.append(acceleration[0]).append(",");
         //logBuilder.append(acceleration[1]).append(",");
         //logBuilder.append(acceleration[2]).append(",");
-        la = linearAcceleration[0] + calibrateAccX;
+        lx = linearAcceleration[0] + calibrateAccX;
         ly = linearAcceleration[1] + calibrateAccY;
         lz = linearAcceleration[2] + calibrateAccZ;
-        logBuilder.append(la).append(",");
+        logBuilder.append(lx).append(",");
         logBuilder.append(ly).append(",");
         logBuilder.append(lz).append(",");
 
@@ -235,9 +240,12 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
         logBuilder.append(gyroscopeOrientation[2]).append(",");
         logBuilder.append(gyroscopeOrientation[0]).append(",");
 
-        logBuilder.append(la * INTEGRAL_TIME_CONSTANT + calibrateDistanceX).append(",");
-        logBuilder.append(ly * INTEGRAL_TIME_CONSTANT + calibrateDistanceY).append(",");
-        logBuilder.append(lz * INTEGRAL_TIME_CONSTANT + calibrateDistanceZ).append(",");
+        vx += ((int) lx) * T;
+        vy += ((int) ly) * T;
+        vz += ((int) lz) * T;
+        logBuilder.append(vx * T + 0.5 * lx * T2).append(",");
+        logBuilder.append(vy * T + 0.5 * ly * T2).append(",");
+        logBuilder.append(vy * T + 0.5 * ly * T2).append(",");
         collectCount();
     }
 
