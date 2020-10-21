@@ -4,6 +4,8 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -314,7 +316,12 @@ public class LinearAccelerationActivity extends Activity implements Runnable, On
     public static void acquireWakeLock(Context context) {
         if (null == mWakeLock) {
             PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-            mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ON_AFTER_RELEASE, "WakeLock");
+            mWakeLock = pm.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK
+                            | PowerManager.ON_AFTER_RELEASE, "WakeLock"
+            );
+            IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+            filter.addAction(Intent.ACTION_SCREEN_OFF);
             if (null != mWakeLock) {
                 mWakeLock.acquire();
             }
