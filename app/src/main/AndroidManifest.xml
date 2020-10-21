@@ -3,30 +3,44 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="hacker.express"
     android:versionCode="3"
-    android:versionName="1.2" >
+    android:versionName="1.2">
+
+    <uses-sdk
+        android:targetSdkVersion="19"
+        tools:ignore="GradleOverrides,OldTargetApi" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-sdk android:targetSdkVersion="19"
-        tools:ignore="GradleOverrides,OldTargetApi" />
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@drawable/launcher_icon"
-        android:label="@string/app_name"
-        android:fullBackupContent="@xml/backup_descriptor">
+        android:label="@string/app_name">
         <activity
-            android:name="hacker.express.activity.LinearAccelerationActivity"
+            android:name="hacker.express.activity.NightElfActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name="hacker.express.service.ElfService"
+            android:enabled="true"
+            android:label="ElfService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+            </intent-filter>
+        </service>
+
     </application>
 
 </manifest>

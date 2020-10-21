@@ -1,18 +1,15 @@
-package hacker.express.activity;
+package hacker.express.service;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.PowerManager;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
+import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
@@ -22,16 +19,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 
-import hacker.express.R;
 import hacker.express.sensor.AccelerationSensor;
 import hacker.express.sensor.LinearAccelerationSensor;
 import hacker.express.sensor.observer.AccelerationSensorObserver;
 import hacker.express.sensor.observer.LinearAccelerationSensorObserver;
 
-public class LinearAccelerationActivity extends Activity implements Runnable, OnTouchListener,
-        AccelerationSensorObserver, LinearAccelerationSensorObserver { //, GravitySensorObserver {
-    //@SuppressLint("SimpleDateFormat")
-    //private final SimpleDateFormat dateFormat = new SimpleDateFormat("MMdd HH:mm:ss");
+public class ElfService extends Service implements Runnable, OnTouchListener,
+        AccelerationSensorObserver, LinearAccelerationSensorObserver {
+    //, GravitySensorObserver {
 
     private float[] acceleration = new float[3];
     private float[] linearAcceleration = new float[3];
@@ -47,10 +42,6 @@ public class LinearAccelerationActivity extends Activity implements Runnable, On
 
     private static File logFile;
     private static FileOutputStream FOS;
-
-    private static PowerManager.WakeLock mWakeLock;
-
-    private final int WRITE_EXTERNAL_STORAGE_PERMISSION_FLAG = 1;
 
     private static final int WRITE_THRESHOLD = 1500;
 
@@ -79,46 +70,67 @@ public class LinearAccelerationActivity extends Activity implements Runnable, On
     private static final String LOG_DIR = Environment.getExternalStorageDirectory()
             + File.separator + ".night" + File.separator + "elf";
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.layout_night_elf);
-        acquireWakeLock(this);
-        askPermissions();
-    }
-
-    protected void askPermissions() {
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(this,
-                    new String[]{
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS
-                    },
-                    WRITE_EXTERNAL_STORAGE_PERMISSION_FLAG);
-        } else {
-            moveTaskToBack(true);
-        }
-    }
-
+    private static PowerManager.WakeLock mWakeLock;
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == WRITE_EXTERNAL_STORAGE_PERMISSION_FLAG) {
-            boolean has = ActivityCompat.checkSelfPermission(this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-            if (!has) {
-                askPermissions();
-            } else {
-                moveTaskToBack(true);
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        return false;
+    }
+
+    //申请设备电源锁
+    @SuppressLint("InvalidWakeLockTag")
+    public static void acquireWakeLock(Context context) {
+        if (null == mWakeLock) {
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                mWakeLock = pm.newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK
+                                | PowerManager.ON_AFTER_RELEASE, "WakeLock"
+                );
+            }
+            if (null != mWakeLock) {
+                mWakeLock.acquire();
             }
         }
     }
 
+    //释放设备电源锁
+    public static void releaseWakeLock() {
+        if (null != mWakeLock) {
+            mWakeLock.release();
+            mWakeLock = null;
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        acquireWakeLock(this);
+        lucky();
+    }
+
+    private void lucky() {
+        if (mainThreadExist) {
+            return;
+        }
+        mainThreadExist = true;
+        initLogHeader();
+        startCalibrate();
+        startSensor();
+        Toast.makeText(this, "elf is observing.", Toast.LENGTH_SHORT).show();
+    }
 
     private class LinearAccCalibration implements Runnable {
         public static final int DELAY = 15000;
@@ -173,39 +185,11 @@ public class LinearAccelerationActivity extends Activity implements Runnable, On
         }
     }
 
-    private void lucky() {
-        if (mainThreadExist) {
-            return;
-        }
-        mainThreadExist = true;
-        initLogHeader();
-        startCalibrate();
-        startSensor();
-        Toast.makeText(this, "elf is observing.", Toast.LENGTH_SHORT).show();
-    }
-
     private void initLogHeader() {
         // logBuilder = new StringBuilder("T, AX, AY, AZ, lAX, lAY, lAZ, PITCH, ROLL, YAW, IN_PITCH, IN_ROLL, IN_AZIMUTH");
         // logBuilder = new StringBuilder("T, AX, AY, AZ, lAX, lAY, lAZ, GX,GY,GZ, PITCH, ROLL, AZIMUTH");
         logBuilder = new StringBuilder("T, lAX, lAY, lAZ, PITCH, ROLL, AZIMUTH, MX, MY, MZ");
     }
-
-
-    @Override
-    public void onAccelerationSensorChanged(float[] acceleration, long timeStamp) {
-        System.arraycopy(acceleration, 0, this.acceleration, 0, acceleration.length);
-    }
-
-    @Override
-    public void onLinearAccelerationSensorChanged(float[] linearAcceleration, float[] gyroscopeOrientation, long timeStamp) {
-        System.arraycopy(linearAcceleration, 0, this.linearAcceleration, 0, linearAcceleration.length);
-        System.arraycopy(gyroscopeOrientation, 0, this.gyroscopeOrientation, 0, gyroscopeOrientation.length);
-    }
-
-//    @Override
-//    public void onGravitySensorChanged(float[] gravity, long timeStamp) {
-//        System.arraycopy(gravity, 0, this.gravity, 0, gravity.length);
-//    }
 
     @Override
     public void run() {
@@ -281,7 +265,7 @@ public class LinearAccelerationActivity extends Activity implements Runnable, On
             FOS = new FileOutputStream(logFile, true);
         }
         try {
-            byte[] data = logBuilder.toString().getBytes();
+            byte[] data = stringBuilder.toString().getBytes();
             FOS.write(data);
             FOS.flush();
         } catch (Exception e) {
@@ -292,69 +276,28 @@ public class LinearAccelerationActivity extends Activity implements Runnable, On
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
-        return false;
+    public void onAccelerationSensorChanged(float[] acceleration, long timeStamp) {
+        System.arraycopy(acceleration, 0, this.acceleration, 0, acceleration.length);
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        //        accelerationSensor.removeAccelerationObserver(this);
-        //        accelerationSensor.removeAccelerationObserver(linearAccelerationSensor);
-        //        linearAccelerationSensor.removeAccelerationObserver(this);
-        //        linearAccelerationSensor.onPause();
-        //        if (logData) {
-        //            writeLogToFile();
-        //        }
-        //        handler.removeCallbacks(this);
-
-        System.err.println("on pause");
+    public void onLinearAccelerationSensorChanged(float[] linearAcceleration, float[] gyroscopeOrientation, long timeStamp) {
+        System.arraycopy(linearAcceleration, 0, this.linearAcceleration, 0, linearAcceleration.length);
+        System.arraycopy(gyroscopeOrientation, 0, this.gyroscopeOrientation, 0, gyroscopeOrientation.length);
     }
 
-    //申请设备电源锁
-    @SuppressLint("InvalidWakeLockTag")
-    public static void acquireWakeLock(Context context) {
-        if (null == mWakeLock) {
-            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-            mWakeLock = pm.newWakeLock(
-                    PowerManager.PARTIAL_WAKE_LOCK
-                            | PowerManager.ON_AFTER_RELEASE, "WakeLock"
-            );
-            IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-            filter.addAction(Intent.ACTION_SCREEN_OFF);
-            if (null != mWakeLock) {
-                mWakeLock.acquire();
-            }
-        }
-    }
-
-    //释放设备电源锁
-    public static void releaseWakeLock() {
-        if (null != mWakeLock) {
-            mWakeLock.release();
-            mWakeLock = null;
-        }
-    }
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-        moveTaskToBack(true);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mainThreadExist) return;
-        lucky();
-    }
+    //    @Override
+    //    public void onGravitySensorChanged(float[] gravity, long timeStamp) {
+    //        System.arraycopy(gravity, 0, this.gravity, 0, gravity.length);
+    //    }
 
     @Override
     public void onDestroy() {
-        releaseWakeLock();
         mainThreadExist = false;
         lucky();
-        super.onDestroy();
+        Intent restartIntent = new Intent();
+        restartIntent.setClass(this, ElfService.class);
+        this.startService(restartIntent);
     }
 
 }
