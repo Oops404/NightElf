@@ -17,7 +17,7 @@ public class RotationVectorSensor implements SensorEventListener {
     private ArrayList<RotationVectorSensorObserver> rotationVectorSensorObservers;
     private Context context;
 
-    private float[] rotation = new float[3];
+    private float[] rotation = new float[5];
 
     private long timeStamp = 0;
     private SensorManager sensorManager;

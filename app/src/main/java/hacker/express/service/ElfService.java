@@ -19,26 +19,35 @@ import java.io.FileOutputStream;
 import hacker.express.sensor.AccelerationSensor;
 import hacker.express.sensor.GyroscopeSensor;
 import hacker.express.sensor.LinearAccelerationOfficialSensor;
+import hacker.express.sensor.OrientationAnglesSensor;
 import hacker.express.sensor.observer.AccelerationSensorObserver;
 import hacker.express.sensor.observer.GyroscopeSensorObserver;
 import hacker.express.sensor.observer.LinearAccelerationOfficialObserver;
+import hacker.express.sensor.observer.OrientationAnglesSensorObserver;
 
 public class ElfService extends Service implements Runnable, OnTouchListener,
-        AccelerationSensorObserver, LinearAccelerationOfficialObserver, GyroscopeSensorObserver {
+        AccelerationSensorObserver, LinearAccelerationOfficialObserver, GyroscopeSensorObserver,
+        OrientationAnglesSensorObserver {
+    //, RotationVectorSensorObserver {
     //, GravitySensorObserver {
 
     private float[] acceleration = new float[3];
     //private float[] linearAcceleration = new float[3];
     private float[] linearAccelerationOfficial = new float[3];
+    //private float[] rotation = new float[3];
     //private float[] gyroscopeOrientation = new float[3];
     private float[] gyroscopeOrientationOfficial = new float[3];
     //private float[] gravity = new float[3];
+    private float[] orientationAngles = new float[3];
 
     private AccelerationSensor accelerationSensor;
     //private LinearAccelerationSensor linearAccelerationSensor;
     private LinearAccelerationOfficialSensor linearAccelerationOfficialSensor;
     //private GravitySensor gravitySensor;
     private GyroscopeSensor gyroscopeSensor;
+    //private RotationVectorSensor rotationVectorSensor;
+    private OrientationAnglesSensor orientationAnglesSensor;
+
     private StringBuilder logBuilder;
     private Handler handler;
 
@@ -144,12 +153,16 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
         accelerationSensor = new AccelerationSensor(this);
         linearAccelerationOfficialSensor = new LinearAccelerationOfficialSensor(this);
         //gravitySensor = new GravitySensor(this);
-        gyroscopeSensor = new GyroscopeSensor(this);
+        //gyroscopeSensor = new GyroscopeSensor(this);
+        //rotationVectorSensor = new RotationVectorSensor(this);
+        orientationAnglesSensor = new OrientationAnglesSensor(this);
 
         handler = new Handler();
         handler.post(this);
 
-        gyroscopeSensor.registerGyroscopeObserver(this);
+        orientationAnglesSensor.registerOrientationAnglesObserver(this);
+        //rotationVectorSensor.registerRotationVectorObserver(this);
+        // gyroscopeSensor.registerGyroscopeObserver(this);
         //gravitySensor.registerGravityObserver(this);
         linearAccelerationOfficialSensor.registerLinearAccelerationObserver(this);
 
@@ -217,9 +230,16 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
         logBuilder.append(lay).append(",");
         logBuilder.append(laz).append(",");
 
-        logBuilder.append(gyroscopeOrientationOfficial[0]).append(",");
-        logBuilder.append(gyroscopeOrientationOfficial[1]).append(",");
-        logBuilder.append(gyroscopeOrientationOfficial[2]).append(",");
+        //logBuilder.append(gyroscopeOrientationOfficial[0]).append(",");
+        //logBuilder.append(gyroscopeOrientationOfficial[1]).append(",");
+        //logBuilder.append(gyroscopeOrientationOfficial[2]).append(",");
+        logBuilder.append(orientationAngles[0]).append(",");
+        logBuilder.append(orientationAngles[1]).append(",");
+        logBuilder.append(orientationAngles[2]).append(",");
+
+        //logBuilder.append(rotation[0]).append(",");
+        //logBuilder.append(rotation[1]).append(",");
+        //logBuilder.append(rotation[2]).append(",");
 
         vx += ((int) lax) * T;
         vy += ((int) lay) * T;
@@ -287,6 +307,17 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
     @Override
     public void onGyroscopeSensorChanged(float[] gyroscope, long timeStamp) {
         System.arraycopy(gyroscope, 0, this.gyroscopeOrientationOfficial, 0, gyroscope.length);
+    }
+
+//    @Override
+//    public void onRotationVectorSensorChanged(float[] rotation, long timeStamp) {
+//        System.arraycopy(rotation, 0, this.rotation, 0, rotation.length);
+//    }
+
+    @Override
+    public void onOrientationAnglesSensorChanged(float[] orientationAngles, long timeStamp) {
+        System.arraycopy(orientationAngles, 0, this.gyroscopeOrientationOfficial, 0, orientationAngles.length);
+
     }
 
     @Override
