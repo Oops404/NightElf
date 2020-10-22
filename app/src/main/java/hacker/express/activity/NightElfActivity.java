@@ -1,10 +1,13 @@
 package hacker.express.activity;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
@@ -15,10 +18,12 @@ import hacker.express.service.ElfService;
 
 public class NightElfActivity extends Activity {
     private final int WRITE_EXTERNAL_STORAGE_PERMISSION_FLAG = 1;
+    private static PowerManager.WakeLock mWakeLock;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        acquireWakeLock(this);
         setContentView(R.layout.layout_night_elf);
 
         askPermissions();
@@ -67,6 +72,30 @@ public class NightElfActivity extends Activity {
         Log.w("[TEST]", " startMonitor START");
     }
 
+    //申请设备电源锁
+    @SuppressLint("InvalidWakeLockTag")
+    public static void acquireWakeLock(Context context) {
+        if (null == mWakeLock) {
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                mWakeLock = pm.newWakeLock(
+                        PowerManager.PARTIAL_WAKE_LOCK
+                                | PowerManager.ON_AFTER_RELEASE, "WakeLock"
+                );
+            }
+            if (null != mWakeLock) {
+                mWakeLock.acquire();
+            }
+        }
+    }
+
+    //释放设备电源锁
+    public static void releaseWakeLock() {
+        if (null != mWakeLock) {
+            mWakeLock.release();
+            mWakeLock = null;
+        }
+    }
 
     private boolean initStart = true;
 
