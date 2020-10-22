@@ -176,10 +176,7 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
     }
 
     private void initLogHeader() {
-        // logBuilder = new StringBuilder("T, AX, AY, AZ, lAX, lAY, lAZ, PITCH, ROLL, YAW, IN_PITCH, IN_ROLL, IN_AZIMUTH");
-        // logBuilder = new StringBuilder("T, AX, AY, AZ, lAX, lAY, lAZ, GX,GY,GZ, PITCH, ROLL, AZIMUTH");
-        // logBuilder = new StringBuilder("T, lAX, lAY, lAZ, LOAX, LOAY, LOAZ, PITCH, ROLL, AZIMUTH, MX, MY, MZ");
-        logBuilder = new StringBuilder("T, LOAX, LOAY, LOAZ, PITCH, ROLL, AZIMUTH, MX, MY, MZ");
+        logBuilder = new StringBuilder("T, AX, AY, AZ, LAX, LAY, LAZ, PITCH, ROLL, AZIMUTH, MX, MY, MZ");
     }
 
     @Override
@@ -191,8 +188,8 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
     /**
      * Log output data to an external .csv file.
      */
-    private float lx = 0, ly = 0, lz = 0;
-    private float lox = 0, loy = 0, loz = 0;
+    private float ax = 0, ay = 0, az = 0;
+    private float lax = 0, lay = 0, laz = 0;
     private float vx = 0, vy = 0, vz = 0;
 
     private void logData() {
@@ -204,51 +201,32 @@ public class ElfService extends Service implements Runnable, OnTouchListener,
         logBuilder.append(System.getProperty("line.separator"));
         logBuilder.append(System.currentTimeMillis()).append(",");
 
-        //logBuilder.append(acceleration[0]).append(",");
-        //logBuilder.append(acceleration[1]).append(",");
-        //logBuilder.append(acceleration[2]).append(",");
-        //lx = linearAcceleration[0] + calibrateAccX;
-        //ly = linearAcceleration[1] + calibrateAccY;
-        //lz = linearAcceleration[2] + calibrateAccZ;
-        //logBuilder.append(lx).append(",");
-        //logBuilder.append(ly).append(",");
-        //logBuilder.append(lz).append(",");
+        ax = acceleration[0] + calibrateLinearAccOfficialX;
+        ay = acceleration[1] + calibrateLinearAccOfficialY;
+        az = acceleration[2] + calibrateLinearAccOfficialZ;
 
-        lox = linearAccelerationOfficial[0] + calibrateLinearAccOfficialX;
-        loy = linearAccelerationOfficial[1] + calibrateLinearAccOfficialY;
-        loz = linearAccelerationOfficial[2] + calibrateLinearAccOfficialZ;
+        logBuilder.append(ax).append(",");
+        logBuilder.append(ay).append(",");
+        logBuilder.append(az).append(",");
 
-        logBuilder.append(lox).append(",");
-        logBuilder.append(loy).append(",");
-        logBuilder.append(loz).append(",");
-        //logBuilder.append(gravity[0]).append(",");
-        //logBuilder.append(gravity[1]).append(",");
-        //logBuilder.append(gravity[2]).append(",");
-        //// 转换欧拉角
-        //EulerAngles eulerAngles = IMU.update(acceleration[0], acceleration[1], acceleration[2],
-        //        linearAcceleration[0], linearAcceleration[1], linearAcceleration[2]);
-        //logBuilder.append(eulerAngles.getPitch()).append(",");
-        //logBuilder.append(eulerAngles.getRoll()).append(",");
-        //logBuilder.append(eulerAngles.getYaw()).append(",");
-        //// 机内自带姿态
-        //logBuilder.append(gyroscopeOrientation[1]).append(",");
-        //logBuilder.append(gyroscopeOrientation[2]).append(",");
-        //logBuilder.append(gyroscopeOrientation[0]).append(",");
+        lax = linearAccelerationOfficial[0] + calibrateLinearAccOfficialX;
+        lay = linearAccelerationOfficial[1] + calibrateLinearAccOfficialY;
+        laz = linearAccelerationOfficial[2] + calibrateLinearAccOfficialZ;
+
+        logBuilder.append(lax).append(",");
+        logBuilder.append(lay).append(",");
+        logBuilder.append(laz).append(",");
+
         logBuilder.append(gyroscopeOrientationOfficial[0]).append(",");
         logBuilder.append(gyroscopeOrientationOfficial[1]).append(",");
         logBuilder.append(gyroscopeOrientationOfficial[2]).append(",");
-        //vx += ((int) lx) * T;
-        //vy += ((int) ly) * T;
-        //vz += ((int) lz) * T;
-        //logBuilder.append(vx * T + 0.5 * lx * T2).append(",");
-        //logBuilder.append(vy * T + 0.5 * ly * T2).append(",");
-        //logBuilder.append(vz * T + 0.5 * lz * T2).append(",");
-        vx += ((int) lox) * T;
-        vy += ((int) loy) * T;
-        vz += ((int) loz) * T;
-        logBuilder.append(vx * T + 0.5 * lx * T2).append(",");
-        logBuilder.append(vy * T + 0.5 * ly * T2).append(",");
-        logBuilder.append(vz * T + 0.5 * lz * T2).append(",");
+
+        vx += ((int) lax) * T;
+        vy += ((int) lay) * T;
+        vz += ((int) laz) * T;
+        logBuilder.append(vx * T + 0.5 * lax * T2).append(",");
+        logBuilder.append(vy * T + 0.5 * lay * T2).append(",");
+        logBuilder.append(vz * T + 0.5 * laz * T2).append(",");
         collectCount();
     }
 
